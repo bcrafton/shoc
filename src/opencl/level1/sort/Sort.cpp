@@ -365,6 +365,15 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
         err = clEnqueueReadBuffer(queue, d_idata, true, 0, bytes, h_odata,
                 0, NULL, &evTransfer.CLEvent());
+
+	ofstream myfile;
+	myfile.open("/home/cbrian/results.csv");
+	int i;
+	for(i=0; i<(bytes/sizeof(int)); i++)
+	{
+		myfile << h_odata[i] << endl;
+	}
+
         CL_CHECK_ERROR(err);
         err = clFinish(queue);
         CL_CHECK_ERROR(err);
