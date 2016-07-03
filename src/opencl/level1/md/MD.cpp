@@ -4,6 +4,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <fstream>
+#include <iomanip>
+#include <stdio.h>
 #include "Event.h"
 #include "MD.h"
 #include "OpenCLDeviceInfo.h"
@@ -388,8 +393,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     err = clEnqueueReadBuffer(queue, d_force, true, 0,
             nAtom * sizeof(forceVecType), force, 0, NULL,
             &evTransfer.CLEvent());
-
-    char path[100];
+			
+	//////Brian /////			
+	char path[100];
 
     static char test_number = 0;
     char filename[5] = "MD00";
@@ -398,7 +404,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     filename[3] = test_number%10 + '0';
     filename[2] = test_number/10 + '0';
 
-    strcpy(path, "/home/cbrian/");
+    strcpy(path, "/scratch/crafton.b/");
     strcat(path, filename);
     strcat(path, ".csv");
 
@@ -413,7 +419,8 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     }
     fclose(fp);
     test_number++;
-
+	//////Brian /////
+	
     CL_CHECK_ERROR(err);
     err = clFinish(queue);
     CL_CHECK_ERROR(err);
@@ -429,7 +436,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     {
         return;
     }
-
+		/*	string filename;
+		    filename="force";
+		    std::ofstream file(filename.c_str());*/
 
     for (int i = 0; i < passes; i++)
     {
@@ -441,12 +450,23 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
                     &globalSize, &localSize, 0, NULL,
                     &evLJ.CLEvent());
             CL_CHECK_ERROR(err);
+			err = clEnqueueReadBuffer(queue, d_force, true, 0,
+            nAtom * sizeof(forceVecType), force, 0, NULL,
+            &evTransfer.CLEvent());
+            CL_CHECK_ERROR(err);
             err = clFinish(queue);
             CL_CHECK_ERROR(err);
-
+             
             // Collect timing info from events
             evLJ.FillTimingInfo();
             total_time += evLJ.SubmitEndRuntime();
+            /*file <<i*iter+j << std::endl;
+			file << fixed << showpoint;
+			for(int kk=0;kk<nAtom;kk++){
+			   file <<std::setprecision(30)<<force[kk].x << std::endl;
+			   file <<std::setprecision(30)<<force[kk].y << std::endl;
+			    file <<std::setprecision(30)<<force[kk].z << std::endl;
+			}*/
         }
 
         char atts[1024];
@@ -470,6 +490,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
                            (seconds + (transferTime / 1.e9)));
         resultDB.AddResult(testName+"_Parity", atts, "N",
                                     (transferTime / 1.e9) / seconds);
+		cout<<"";
     }
 
     // Clean up

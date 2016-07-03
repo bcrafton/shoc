@@ -6,6 +6,11 @@
 #include <fstream>
 #include <iostream>
 
+#include <sstream>
+#include <string>
+#include <fstream>
+#include <iomanip>
+#include <stdio.h>
 #include "OpenCLDeviceInfo.h"
 #include "Event.h"
 #include "OptionParser.h"
@@ -299,6 +304,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     int iters  = op.getOptionInt("iterations");
 
     cout << "Running benchmark." << endl;
+	string filename;
+	filename="reduction_out";
+	std::ofstream file(filename.c_str());
     for (int k = 0; k < passes; k++)
     {
         double totalReduceTime = 0.0;
@@ -325,8 +333,8 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
         err = clEnqueueReadBuffer(queue, d_odata, true, 0,
                 numBlocks*sizeof(T), h_odata, 0, NULL, &evTransfer.CLEvent());
-
-	char path[100];
+	////Brian Edit////				
+		char path[100];
 
 	static char test_number = 0;
 	char filename[12] = "Reduction00";
@@ -335,7 +343,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 	filename[10] = test_number%10 + '0';
 	filename[9] = test_number/10 + '0';
 
-	strcpy(path, "/home/cbrian/");
+	strcpy(path, "/scratch/crafton.b/");
 	strcat(path, filename);
 	strcat(path, ".csv");
 
@@ -351,12 +359,18 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 	}
 	fclose(fp);
 	test_number++;
-	
-
+	////Brian Edit////	
         CL_CHECK_ERROR(err);
         err = clFinish(queue);
         CL_CHECK_ERROR(err);
         evTransfer.FillTimingInfo();
+		file <<k << std::endl;
+		file << fixed << showpoint;
+		for(int kk=0;kk<numBlocks;kk++){
+			   file <<std::setprecision(30)<<h_odata[kk] << std::endl;
+			   file <<std::setprecision(30)<<h_odata[kk] << std::endl;
+			   file <<std::setprecision(30)<<h_odata[kk] << std::endl;
+		}
         double totalTransfer = (inputTransfer + evTransfer.StartEndRuntime()) /
                 1.e9;
         // If result isn't correct, don't report performance

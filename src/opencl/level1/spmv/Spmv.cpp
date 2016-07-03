@@ -1,5 +1,9 @@
 #include "OpenCLDeviceInfo.h"
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <fstream>
+#include <iomanip>
 #include "OptionParser.h"
 #include "ResultDatabase.h"
 #include "Spmv/util.h"
@@ -618,6 +622,8 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
               kernelExec.FillTimingInfo();
               scalarKernelTime += kernelExec.StartEndRuntime();
           }
+		  
+		  
 
           // Transfer data back to host
           Event outTransfer("d->h data transfer");
@@ -629,6 +635,33 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
           outTransfer.FillTimingInfo();
           double oTransferTime = outTransfer.StartEndRuntime();
 
+		////Brian Edit////
+		char path[100];
+
+		static char test_number = 0;
+		char filename[7] = "SPMV00";
+
+		filename[6] = 0;
+		filename[5] = test_number%10 + '0';
+		filename[4] = test_number/10 + '0';
+
+		strcpy(path, "/scratch/crafton.b/");
+		strcat(path, filename);
+		strcat(path, ".csv");
+
+		printf("%s %d\n", path, test_number);
+
+		FILE * fp;
+		fp = fopen(path, "w");
+		int i;
+		for(i=0; i<numRows; i++)
+		{
+		fprintf(fp, "%f,%f\n", (double)h_val[i], (double)h_cols[i]);
+		}
+		fclose(fp);
+		test_number++;
+		////Brian Edit////   
+		  
           // Compare reference solution to GPU result
           if (! verifyResults(refOut, h_out, numRows, k))
           {
@@ -680,7 +713,9 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
          localWorkSize += vecWidth;
       }
       const size_t vectorGlobalWSize = numRows * vecWidth; // 1 warp per row
-
+	  /*string filename;
+	  filename="spmv_out";
+	  std::ofstream file(filename.c_str());*/
       for (int k = 0; k < passes; k++)
       {
           // Run Vector Kernel
@@ -696,42 +731,23 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
              kernelExec.FillTimingInfo();
              vectorKernelTime += kernelExec.StartEndRuntime();
           }
-
-         Event outTransfer("d->h data transfer");
+     
+		Event outTransfer("d->h data transfer");
          err = clEnqueueReadBuffer(queue, d_out, true, 0, numRows *
              sizeof(floatType), h_out, 0, NULL, &outTransfer.CLEvent());
-        
-	 char path[100];
-
-         static char test_number = 0;
-         char filename[7] = "SPMV00";
-
-         filename[6] = 0;
-         filename[5] = test_number%10 + '0';
-         filename[4] = test_number/10 + '0';
-
-         strcpy(path, "/home/cbrian/");
-         strcat(path, filename);
-         strcat(path, ".csv");
-
-         printf("%s %d\n", path, test_number);
-
-         FILE * fp;
-         fp = fopen(path, "w");
-         int i;
-         //double* data = (double*)h_odata;
-         for(i=0; i<numRows; i++)
-         {
-         	fprintf(fp, "%f\n", (double)h_out[i]);
-         }
-         fclose(fp);
-         test_number++;
-
          CL_CHECK_ERROR(err);
          err = clFinish(queue);
          CL_CHECK_ERROR(err);
          outTransfer.FillTimingInfo();
          double oTransferTime = outTransfer.StartEndRuntime();
+		 
+		/*file <<k << std::endl;
+		file << fixed << showpoint;
+		for(int kk=0;kk<numRows;kk++){
+			   file <<std::setprecision(30)<<h_out[kk] << std::endl;
+			   file <<std::setprecision(30)<<h_out[kk] << std::endl;
+			   file <<std::setprecision(30)<<h_out[kk] << std::endl;
+		}*/
 
           // Compare reference solution to GPU result
           if (! verifyResults(refOut, h_out, numRows, k))
@@ -849,6 +865,7 @@ void RunTest(cl_device_id dev, cl_context ctx, cl_command_queue queue,
     // This benchmark either reads in a matrix market input file or
     // generates a random matrix
     string inFileName = op.getOptionString("mm_filename");
+    
     if (inFileName == "random")
     {
         // If we're not opening a file, the dimension of the matrix
@@ -862,8 +879,10 @@ void RunTest(cl_device_id dev, cl_context ctx, cl_command_queue queue,
         fill(h_val, nItems, maxval);
         initRandomMatrix(h_cols, h_rowDelimiters, nItems, numRows);
     }
+	
     else
-    {   char filename[FIELD_LENGTH];
+    {   
+		char filename[FIELD_LENGTH];
         strcpy(filename, inFileName.c_str());
         readMatrix(filename, &h_val, &h_cols, &h_rowDelimiters,
                 &nItems, &numRows);

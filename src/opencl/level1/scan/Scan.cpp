@@ -5,7 +5,10 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-
+#include <sstream>
+#include <string>
+#include <fstream>
+#include <iomanip>
 #include "OpenCLDeviceInfo.h"
 #include "Event.h"
 #include "OptionParser.h"
@@ -327,6 +330,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     int iters  = op.getOptionInt("iterations");
 
     cout << "Running benchmark with size " << size << endl;
+	/*string filename;
+	filename="scan_out";
+	std::ofstream file(filename.c_str());*/
     for (int k = 0; k < passes; k++)
     {
         int th = Timer::Start();
@@ -356,12 +362,8 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         }
         err = clFinish(queue);
         CL_CHECK_ERROR(err);
-        double totalScanTime = Timer::Stop(th, "total scan time");
-
-        err = clEnqueueReadBuffer(queue, d_odata, true, 0, bytes, h_odata,
-                0, NULL, &evTransfer.CLEvent());
-
-	char path[100];
+////Brian Edit////		
+		char path[100];
 
 	static char test_number = 0;
 	char filename[7] = "Scan00";
@@ -370,7 +372,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 	filename[5] = test_number%10 + '0';
 	filename[4] = test_number/10 + '0';
 
-	strcpy(path, "/home/cbrian/");
+	strcpy(path, "/scratch/crafton.b/");
 	strcat(path, filename);
 	strcat(path, ".csv");
 
@@ -385,10 +387,21 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 	}
 	fclose(fp);
 	test_number++;
+	////Brian Edit////
+        double totalScanTime = Timer::Stop(th, "total scan time");
 
+        err = clEnqueueReadBuffer(queue, d_odata, true, 0, bytes, h_odata,
+                0, NULL, &evTransfer.CLEvent());
         CL_CHECK_ERROR(err);
         err = clFinish(queue);
         CL_CHECK_ERROR(err);
+		/*file <<k << std::endl;
+		file << fixed << showpoint;
+		for(int kk=0;kk<bytes/sizeof(T);kk++){
+			   file <<std::setprecision(30)<<h_odata[kk] << std::endl;
+			   file <<std::setprecision(30)<<h_odata[kk] << std::endl;
+			   file <<std::setprecision(30)<<h_odata[kk] << std::endl;
+		}*/
         evTransfer.FillTimingInfo();
         double totalTransfer = inTransferTime + evTransfer.StartEndRuntime();
         totalTransfer /= 1.e9; // Convert to seconds
