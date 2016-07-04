@@ -285,37 +285,35 @@ DoTest( std::string testName,
 			////Brian Edit////	
 			char path[100];
 
-            static char test_number = 0;
-            char filename[12] = "Stencil2D00";
-
-            filename[11] = 0;
-            filename[10] = test_number%10 + '0';
-            filename[9] = test_number/10 + '0';
-
-            strcpy(path, "/scratch/crafton.b/");
-            strcat(path, filename);
-            strcat(path, ".csv");
-
-            printf("%s %d\n", path, test_number);
-
-			T** out = (T**) data.GetData();
-			FILE * fp;
-			fp = fopen(path, "w");
-			int i, j;
-
-			for(i=0; i<expected.GetNumRows(); i++)
+            static char test = 0;
+			
+			if(!test)
 			{
-				for(j=0; j<expected.GetNumColumns(); j++)
+				char* filename = "Stencil2D";
+
+				strcpy(path, "/home/cbrian/");
+				strcat(path, filename);
+				strcat(path, ".csv");
+
+				T** out = (T**) data.GetData();
+				FILE * fp;
+				fp = fopen(path, "w");
+				int i, j;
+
+				for(i=0; i<expected.GetNumRows(); i++)
 				{
-					if(j==expected.GetNumColumns()-1)
-						fprintf(fp, "%f", out[i][j]);
-					else
-						fprintf(fp, "%f,", out[i][j]);
+					for(j=0; j<expected.GetNumColumns(); j++)
+					{
+						if(j==expected.GetNumColumns()-1)
+							fprintf(fp, "%f", out[i][j]);
+						else
+							fprintf(fp, "%f,", out[i][j]);
+					}
+					fprintf(fp, "\n");
 				}
-				fprintf(fp, "\n");
+				fclose(fp);
 			}
-			fclose(fp);
-            test_number++;
+
 
 		////Brian Edit////		
             double elapsedTime = Timer::Stop( timerHandle, "OpenCL stencil" );

@@ -394,31 +394,29 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
             nAtom * sizeof(forceVecType), force, 0, NULL,
             &evTransfer.CLEvent());
 			
-	//////Brian /////			
+	//////Brian /////
+	
 	char path[100];
+    static char test = 0;
+	if(!test)
+	{
+	    char* filename = "MD";
 
-    static char test_number = 0;
-    char filename[5] = "MD00";
+		strcpy(path, "/home/cbrian/");
+		strcat(path, filename);
+		strcat(path, ".csv");
 
-    filename[4] = 0;
-    filename[3] = test_number%10 + '0';
-    filename[2] = test_number/10 + '0';
+		FILE * fp;
+		fp = fopen(path, "w");
+		int i;
+		for(i=0; i<nAtom; i++)
+		{
+			fprintf(fp, "%f,%f,%f,%f\n", force[i].x, force[i].y, force[i].z, force[i].w);
+		}
+		fclose(fp);
+		test = 1;
+	}
 
-    strcpy(path, "/scratch/crafton.b/");
-    strcat(path, filename);
-    strcat(path, ".csv");
-
-    printf("%s %d\n", path, test_number);
-
-    FILE * fp;
-    fp = fopen(path, "w");
-    int i;
-    for(i=0; i<nAtom; i++)
-    {
-	fprintf(fp, "%f,%f,%f,%f\n", force[i].x, force[i].y, force[i].z, force[i].w);
-    }
-    fclose(fp);
-    test_number++;
 	//////Brian /////
 	
     CL_CHECK_ERROR(err);

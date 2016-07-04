@@ -638,28 +638,25 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
 		////Brian Edit////
 		char path[100];
 
-		static char test_number = 0;
-		char filename[7] = "SPMV00";
-
-		filename[6] = 0;
-		filename[5] = test_number%10 + '0';
-		filename[4] = test_number/10 + '0';
-
-		strcpy(path, "/scratch/crafton.b/");
-		strcat(path, filename);
-		strcat(path, ".csv");
-
-		printf("%s %d\n", path, test_number);
-
-		FILE * fp;
-		fp = fopen(path, "w");
-		int i;
-		for(i=0; i<numRows; i++)
+		static char test = 0;
+		if(!test)
 		{
-		fprintf(fp, "%f,%f\n", (double)h_val[i], (double)h_cols[i]);
+			char* filename = "SPMV";
+
+			strcpy(path, "/home/cbrian/");
+			strcat(path, filename);
+			strcat(path, ".csv");
+
+			FILE * fp;
+			fp = fopen(path, "w");
+			int i;
+			for(i=0; i<numRows; i++)
+			{
+			fprintf(fp, "%f,%f\n", (double)h_val[i], (double)h_cols[i]);
+			}
+			fclose(fp);
 		}
-		fclose(fp);
-		test_number++;
+		
 		////Brian Edit////   
 		  
           // Compare reference solution to GPU result
